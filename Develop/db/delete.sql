@@ -1,0 +1,5 @@
+-- DELETE ALL TABLES
+
+DROP TABLE Departments;
+DROP TABLE Roles;
+DROP TABLE Employees;
