@@ -29,3 +29,5 @@ INSERT INTO roles (job_title, department_id, salary) VALUES ('Executive Secretar
 -- Employees
 
 INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ('Jane', 'Doe', 5, NULL);
+
+INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ('Jannette', 'Doe2', 4, 1);

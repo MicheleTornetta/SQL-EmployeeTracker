@@ -27,22 +27,3 @@ CREATE TABLE Employees (
 	FOREIGN KEY (manager_id) REFERENCES Employees(employee_id)
 );
 
-
--- see crud info 
-
-
--- INSERT INTO Departments (department_name) VALUES ("Human Resources");
--- INSERT INTO Departments (department_name) VALUES ("Engineering");
-
--- INSERT INTO Roles (job_title, department_id, salary) VALUES ("Hiring people", 1, 10000);
--- INSERT INTO Roles (job_title, department_id, salary) VALUES ("Code monkey", 2, 100000000);
--- INSERT INTO Roles (job_title, department_id, salary) VALUES ("Emotional support", 1, NULL);
-
--- SELECT Roles.job_title, Departments.department_name, Roles.department_id FROM Roles
--- 	JOIN Departments ON Roles.department_id = Departments.department_id;
-
--- INSERT INTO Employees (first_name, last_name, role_id, manager_id) VALUES ("Mary", "Doe", 1, NULL);
-
-/* SELECT * FROM Employees
-JOIN Roles ON roles.role_id = Employees.role_id
-JOIN Departments ON roles.department_id = Departments.department_id;*/
