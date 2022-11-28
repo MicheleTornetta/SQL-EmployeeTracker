@@ -84,19 +84,23 @@ const fs = require("fs");
     else if (answer.choice === "List Roles") {
       //getting data from database
       const [rows] = await connection.query(`
-      SELECT role_id, job_title FROM roles`);
+      SELECT role_id, job_title, salary, department_name FROM roles
+      JOIN departments ON roles.department_id = departments.department_id`);
         
       const formatted = [
         [
           "Role ID",
           "Title",
+          "Salary",
+          "Department"
         ],
         ...rows.map((row) => {
           
           return [
             row.role_id,
             row.job_title,
-
+            '$' + row.salary,
+            row.department_name,
           ];
         }),
       ];
