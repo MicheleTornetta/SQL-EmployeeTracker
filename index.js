@@ -1,10 +1,11 @@
 const mysql = require("mysql2/promise");
 const inquirer = require("inquirer");
+const table = require("table");
 const fs = require("fs");
 
 (async () => {
   const secrets = require("./secrets.json");
-
+//log into db
   const connection = await mysql.createConnection({
     host: "localhost",
     // Your username
@@ -13,11 +14,11 @@ const fs = require("fs");
     password: secrets.password,
     database: "testdb",
   });
-
+  //clean data for testing
   await connection.query("DROP TABLE IF EXISTS Employees");
   await connection.query("DROP TABLE IF EXISTS Roles");
   await connection.query("DROP TABLE IF EXISTS Departments");
-
+  //create the testing data
   const schema = fs
     .readFileSync("Develop/db/schema.sql")
     .toString()
@@ -43,6 +44,8 @@ const fs = require("fs");
         name: "choice",
         message: "What would you like to do?",
         choices: [
+          "List Departments",
+          "List Roles",
           "List Employees",
           "Add Department",
           "Add Role",
@@ -53,8 +56,56 @@ const fs = require("fs");
       },
     ]);
 
-      // full employee list to include id, name, title, dept, salary & manager
-    if (answer.choice === "List Employees") {
+    // full department list 
+    if (answer.choice === "List Departments") {
+      //getting data from database
+      const [rows] = await connection.query(`
+        SELECT department_id, department_name FROM Departments`);
+        
+      const formatted = [
+        [
+          "Department ID",
+          "Department Name",
+        ],
+        ...rows.map((row) => {
+          
+          return [
+            row.department_id,
+            row.department_name,
+
+          ];
+        }),
+      ];
+
+      console.log(table.table(formatted));
+    }
+
+    // full role/title list 
+    else if (answer.choice === "List Roles") {
+      //getting data from database
+      const [rows] = await connection.query(`
+      SELECT role_id, job_title FROM roles`);
+        
+      const formatted = [
+        [
+          "Role ID",
+          "Title",
+        ],
+        ...rows.map((row) => {
+          
+          return [
+            row.role_id,
+            row.job_title,
+
+          ];
+        }),
+      ];
+
+      console.log(table.table(formatted));
+    }
+
+    // full employee list to include id, name, title, dept, salary & manager
+    else if (answer.choice === "List Employees") {
       // to join differnt tables
       const [rows] = await connection.query(`
         SELECT 
@@ -66,10 +117,38 @@ const fs = require("fs");
           JOIN Departments ON roles.department_id = Departments.department_id
           LEFT JOIN Employees managers ON managers.employee_id = Employees.manager_id;`);
 
-      for (let i = 0; i < rows.length; i++) {
-        const employee = rows[i];
-        console.log(employee.first_name + " " + employee.last_name);
-      }
+      const formatted = [
+        [
+          "Employee ID",
+          "First Name",
+          "Last Name",
+          "Job Title",
+          "Department",
+          "Salary",
+          "Manager",
+        ],
+        ...rows.map((row) => {
+          let manager;
+          if (row.manager_first_name) {
+            manager = row.manager_first_name + " " + row.manager_last_name;
+          } else {
+            manager = "None";
+          }
+
+          return [
+            row.employee_id,
+            row.first_name,
+            row.last_name,
+            row.job_title,
+            row.department_name,
+            "$" + row.salary,
+            manager,
+          ];
+        }),
+      ];
+
+      console.log(table.table(formatted));
+      //add department
     } else if (answer.choice === "Add Department") {
       const departmentAnswers = await inquirer.prompt([
         {
@@ -93,13 +172,10 @@ const fs = require("fs");
         [departmentAnswers.depName]
       );
       console.log("Department added to the database.");
-    } 
-    else if (answer.choice === "Add Role") {
+    } else if (answer.choice === "Add Role") {
       const [rows] = await connection.query(
         `SELECT department_name, department_id FROM Departments;`
       );
-
-      console.log(rows);
 
       const choices = rows.map(function (department) {
         return department.department_name;
@@ -157,19 +233,30 @@ const fs = require("fs");
         }
       }
       console.log("You have added a new employee role!");
-    } 
-    else if (answer === "Add Employee") {
-      const [rows] = await connection.query(
+    } else if (answer.choice === "Add Employee") {
+      // ROLES
+      const [rolesRows] = await connection.query(
         `SELECT job_title, role_id FROM Roles;`
       );
 
-      console.log(rows);
-
-      const choices = rows.map(function (role) {
+      const rolesChoices = rolesRows.map(function (role) {
         return role.job_title;
       });
-      //add new employee first name
+
+      // MANAGERS
+      const [managersRows] = await connection.query(
+        `SELECT first_name, last_name, employee_id FROM Employees;`
+      );
+
+      const managersChoices = [
+        "None",
+        ...managersRows.map(function (employee) {
+          return employee.first_name + " " + employee.last_name;
+        }),
+      ];
+
       const newEmployeeAnswers = await inquirer.prompt([
+        //add new employee first name
         {
           type: "input",
           message: "What is the new employee's First Name?",
@@ -182,11 +269,11 @@ const fs = require("fs");
             }
           },
         },
-      //add new employee last name
+        //add new employee last name
         {
           type: "input",
           message: "What is the new employee's Last Name?",
-          name: "LastName",
+          name: "lastName",
           validate: (typeInput) => {
             if (typeInput) {
               return true;
@@ -195,61 +282,123 @@ const fs = require("fs");
             }
           },
         },
-         //assign role to a specific department
-         {
+        //assign role to a specific rol
+        {
           type: "list",
-          name: "EmployeeDepartmentName",
-          message: "Which department does this work in?",
-          choices: choices,
+          name: "EmployeeRole",
+          message: "Which role/title does this employee have?",
+          choices: rolesChoices,
+        },
+        {
+          type: "list",
+          name: "EmployeeManager",
+          message: "Which manager does this employee have?",
+          choices: managersChoices,
         },
       ]);
 
-      for (let i = 0; i < rows.length; i++) {
-        if (rows[i].department_name === roleAnswers.EmployeeDepartmentName) {
-          await connection.query(
-            `
-          INSERT INTO Roles (job_title, department_id, salary) VALUES (?, ?, ?);
-          `,
-            [
-              roleAnswers.roleName,
-              rows[i].department_id,
-              roleAnswers.roleSalary,
-            ]
-          );
+      let roleId;
+      let managerId;
 
+      for (let i = 0; i < rolesRows.length; i++) {
+        if (rolesRows[i].job_title === newEmployeeAnswers.EmployeeRole) {
+          roleId = rolesRows[i].role_id;
           break;
         }
       }
-      console.log("You have added a new employee role!");
-    } 
-    else if (answer === "Add Employee") {
-      const [rows] = await connection.query(
+
+      if (newEmployeeAnswers.EmployeeManager !== "None") {
+        for (let i = 0; i < managersRows.length; i++) {
+          if (
+            managersRows[i].first_name + " " + managersRows[i].last_name ===
+            newEmployeeAnswers.EmployeeManager
+          ) {
+            managerId = managersRows[i].employee_id;
+            break;
+          }
+        }
+      } else {
+        managerId = null;
+      }
+
+      await connection.query(
+        `
+        INSERT INTO Employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?);
+        `,
+        [
+          newEmployeeAnswers.firstName,
+          newEmployeeAnswers.lastName,
+          roleId,
+          managerId,
+        ]
+      );
+      console.log("You have added a new employee!");
+    } else if (answer.choice === "Update Employee Role") {
+      // Update Role
+      const [rolesRows] = await connection.query(
         `SELECT job_title, role_id FROM Roles;`
       );
 
-      console.log(rows);
-
-      const choices = rows.map(function (role) {
+      const rolesChoices = rolesRows.map(function (role) {
         return role.job_title;
       });
-        //add new employee's role/title
+
+      // MANAGERS
+      const [employeeRows] = await connection.query(
+        `SELECT first_name, last_name, employee_id FROM Employees;`
+      );
+
+      const employeeChoices = employeeRows.map(function (employee) {
+        return employee.first_name + " " + employee.last_name;
+      });
+
+      //find empoyee
+
+      const answers = await inquirer.prompt([
         {
-          type: "input",
-          message: "Who is the new employee's manager?",
-          name: "managerName",
-          choices: choices,
-          validate: (typeInput) => {
-            if (typeInput) {
-              return true;
-            } else {
-              return "Please enter the new manager's role.";
-            }
-          },
+          type: "list",
+          message: "Which employee?",
+          name: "employeeName",
+          choices: employeeChoices,
+        },
+        {
+          type: "list",
+          message: "What is the employee's new role/title?",
+          name: "employeeRole",
+          choices: rolesChoices,
         },
       ]);
-    } 
-    
-    else {
+
+      let roleId;
+
+      for (let i = 0; i < rolesRows.length; i++) {
+        if (rolesRows[i].job_title === answers.employeeRole) {
+          roleId = rolesRows[i].role_id;
+          break;
+        }
+      }
+
+      let employeeId;
+
+      for (let i = 0; i < employeeRows.length; i++) {
+        if (
+          employeeRows[i].first_name + " " + employeeRows[i].last_name ===
+          answers.employeeName
+        ) {
+          employeeId = employeeRows[i].employee_id;
+          break;
+        }
+      }
+
+      await connection.query(
+        `
+        UPDATE Employees SET role_id = ? WHERE employee_id = ?;
+      `,
+        [roleId, employeeId]
+      );
+
+      console.log('Updated employee\'s role!');
+    } else {
       await connection.end();
       runAgain = false;
     }
