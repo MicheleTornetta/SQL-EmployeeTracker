@@ -5,7 +5,7 @@ const fs = require("fs");
 
 (async () => {
   const secrets = require("./secrets.json");
-//log into db
+log into db
   const connection = await mysql.createConnection({
     host: "localhost",
     // Your username
@@ -110,7 +110,7 @@ const fs = require("fs");
 
     // full employee list to include id, name, title, dept, salary & manager
     else if (answer.choice === "List Employees") {
-      // to join differnt tables
+      // to join different tables
       const [rows] = await connection.query(`
         SELECT 
           Employees.*, Roles.job_title, Roles.salary, 
