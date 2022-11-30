@@ -5,7 +5,7 @@ const fs = require("fs");
 
 (async () => {
   const secrets = require("./secrets.json");
-log into db
+  //log into db
   const connection = await mysql.createConnection({
     host: "localhost",
     // Your username
@@ -18,7 +18,8 @@ log into db
   await connection.query("DROP TABLE IF EXISTS Employees");
   await connection.query("DROP TABLE IF EXISTS Roles");
   await connection.query("DROP TABLE IF EXISTS Departments");
-  //create the testing data
+
+
   const schema = fs
     .readFileSync("Develop/db/schema.sql")
     .toString()
@@ -27,6 +28,7 @@ log into db
     await connection.query(schema[i]);
   }
 
+  //create the testing data
   const seed = fs.readFileSync("Develop/db/seed.sql").toString().split("\n");
 
   for (let i = 0; i < seed.length; i++) {
