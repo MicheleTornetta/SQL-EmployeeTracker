@@ -13,10 +13,10 @@ The SQL-Employee Tracker Content Management System is desidgned to allow non-dev
 - [Questions](#questions)
 
 ## Application Image 
-![Application Image](/assets/sqlEmpTracker1.png)
-![Application Image](../assets/sqlEmpTracker2.png)
+![Application Image](./Assets/sqlEmpTracker1.png)
+![Application Image](./Assets/sqlEmpTracker2.png)
 ![Application Image](./Assets/sqlEmpTracker3.png)
-![Application Image](../Assets/sqlEmpTracker4.png)
+![Application Image](./Assets/sqlEmpTracker4.png)
 
 ## Installation Instructions
 To install the application, you would download the SQL-EmployeeTracker repository (https://github.com/MicheleTornetta/SQL-EmployeeTracker).  User will need to download and install the MySql developer addition.  From there you would navigate to the directory in the command terminal.  Once there the user will need to type in "npm i" to download the dependencies. 
