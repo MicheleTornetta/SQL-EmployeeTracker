@@ -13,7 +13,7 @@ The SQL-Employee Tracker Content Management System is desidgned to allow non-dev
 - [Questions](#questions)
 
 ## Application Image 
-![Application Image](../assets/sqlEmpTracker1.png)
+![Application Image](/assets/sqlEmpTracker1.png)
 ![Application Image](./assets/sqlEmpTracker2.png)
 ![Application Image](./assets/sqlEmpTracker3.png)
 ![Application Image](./assets/sqlEmpTracker4.png)
